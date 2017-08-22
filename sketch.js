@@ -2,10 +2,13 @@ var cols, rows;
 var w = 40; // canh hinh vuong cell
 var grid = [];
 
+var current; // current cell
+
 function setup() {
     createCanvas(400, 400);
     cols = width / w;
     rows = height / w;
+    frameRate(5);
 
     for(var j = 0; j < rows; j++) {
         for(var i = 0; i < cols; i++) {
@@ -13,6 +16,8 @@ function setup() {
             grid.push(cell);
         }
     }
+
+    current = grid[0];
 }
 
 function draw() {
@@ -21,12 +26,60 @@ function draw() {
     for(var i = 0; i < grid.length; i++) {
         grid[i].show();
     }
+
+    current.visited = true;
+    var next = current.checkNeighbors(); // get one neighbor of current not visited
+
+    if(next) {
+        next.visited = true;
+        current = next;
+    }
+}
+
+function index(i, j) {
+    if(i < 0 || j < 0 || i > cols - 1 || j > rows - 1) {
+        return -1;
+    }
+    return  i + j * cols;
 }
 
 function Cell(i, j) {
     this.i = i; // column number
     this.j = j; // row number
     this.walls = [true, true, true, true];
+    this.visited = false;
+
+    this.checkNeighbors = function () {
+        var neighbors = [];
+
+        var top = grid[index(i, j - 1)];
+        var right = grid[index(i + 1, j)];
+        var bottom = grid[index(i, j + 1)];
+        var left = grid[index(i - 1, j)];
+
+        if(top && !top.visited) {
+            neighbors.push(top);
+        }
+
+        if(right && !right.visited) {
+            neighbors.push(right);
+        }
+
+        if(bottom && !bottom.visited) {
+            neighbors.push(bottom);
+        }
+
+        if(left && !left.visited) {
+            neighbors.push(left);
+        }
+
+        if(neighbors.length > 0) {
+            var r = floor(random(0, neighbors.length));
+            return neighbors[r];
+        } else {
+            return undefined;
+        }
+    };
     
     this.show = function () {
         var x = this.i * w;
@@ -45,7 +98,10 @@ function Cell(i, j) {
         if(this.walls[3]) {
             line(x, y + w, x, y);
         }
-        // noFill();
-        // rect(x, y, w, w);
+
+        if(this.visited) {
+            fill(255, 0, 255, 100);
+            rect(x, y, w, w);
+        }
     }
 }
