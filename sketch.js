@@ -1,14 +1,16 @@
 var cols, rows;
-var w = 40; // canh hinh vuong cell
+var w = 20; // canh hinh vuong cell
 var grid = [];
 
 var current; // current cell
+
+var stack = [];
 
 function setup() {
     createCanvas(400, 400);
     cols = width / w;
     rows = height / w;
-    frameRate(5);
+    frameRate(100);
 
     for(var j = 0; j < rows; j++) {
         for(var i = 0; i < cols; i++) {
@@ -28,11 +30,22 @@ function draw() {
     }
 
     current.visited = true;
+    current.highlight();
+    // STEP 1
     var next = current.checkNeighbors(); // get one neighbor of current not visited
 
     if(next) {
-        next.visited = true;
+        // STEP 2
+        stack.push(current);
+
+        // STEP 3
+        removeWalls(current, next);
+
+        // STEP 4
         current = next;
+        next.visited = true;
+    } else if(stack.length > 0) {
+        current = stack.pop();
     }
 }
 
@@ -48,6 +61,14 @@ function Cell(i, j) {
     this.j = j; // row number
     this.walls = [true, true, true, true];
     this.visited = false;
+
+    this.highlight = function () {
+        var x = this.i * w;
+        var y = this.j * w;
+        noStroke();
+        fill(0,0,255,100);
+        rect(x, y, w, w);
+    };
 
     this.checkNeighbors = function () {
         var neighbors = [];
@@ -100,8 +121,30 @@ function Cell(i, j) {
         }
 
         if(this.visited) {
+            noStroke();
             fill(255, 0, 255, 100);
             rect(x, y, w, w);
         }
+    }
+}
+
+function removeWalls(current, next) {
+    var x = current.i - next.i;
+
+    if(x === 1) {
+        current.walls[3] = false;
+        next.walls[1] = false;
+    } else if (x === -1) {
+        current.walls[1] = false;
+        next.walls[3] = false;
+    }
+
+    var y = current.j - next.j;
+    if(y === 1) {
+        current.walls[0] = false;
+        next.walls[2] = false;
+    } else if (y === -1) {
+        current.walls[2] = false;
+        next.walls[0] = false;
     }
 }
